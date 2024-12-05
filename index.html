@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UOB Student Nationality Data</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.5.7/css/pico.min.css">
+  <style>
+
+    body {
+        padding: 2em;
+    }
+    table {
+      margin: 2rem auto;
+      width: 90%;
+    }
+    th, td {
+      text-align: center;
+    }
+    .loading {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      color: #555;
+    }
+    .filter-form {
+            margin-bottom: 1.5rem;
+        }
+
+        @media only screen and (max-width: 525px) {
+            th {
+                font-size: 0.8em;
+            }
+            td {
+                font-size: 0.6em;
+            }
+            body {
+                padding: 0;
+            }
+        } 
+        @media only screen and (max-width: 440px) {
+            h1, h2 {
+                font-size: 24px;
+                margin-bottom: 1em;
+            }
+            th {
+                font-size: 0.67em;
+            }
+            td {
+                font-size: 0.5.5em;
+            }
+            td, th {
+                padding-left: 5px;
+                padding-right: 5px;
+            } 
+        }
+  </style>
+</head>
+<body>
+
+  <header class="container">
+    <h1>University of Bahrain Student Enrollment by Nationality</h1>
+  </header>
+
+  <form method="" class="filter-form" id="filter-form">
+    <label for="program">Program:</label>
+        <select name="program" id="program">
+            <option value="bachelor">bachelor</option>
+            <option value="master's">master's</option>
+            <option value="diploma">diploma</option>
+            <option value="doctoral">doctoral</option>
+        </select>
+
+        <!-- <label for="year">Year:</label>
+        <select name="year" id="year">
+            <option value="All">All</option>
+            <option value="2018-2019">2018-2019</option>
+            <option value="2019-2020">2019-2020</option>
+            <option value="2020-2021">2020-2021</option>
+            <option value="2021-2022">2021-2022</option>
+        </select>
+
+        <label for="semester">Semester:</label>
+        <select name="semester" id="semester">
+            <option value="All">All</option>
+            <option value="First Semester">First Semester</option>
+            <option value="Second Semester">Second Semester</option>
+            <option value="Summer Semester">Summer Semester</option>
+        </select>
+
+        <label for="nationality">Nationality:</label>
+        <select name="nationality" id="nationality">
+            <option value="All">All</option>
+            <option value="Bahraini">Bahraini</option>
+            <option value="GCC National">GCC National</option>
+            <option value="Other">Other</option>
+        </select> -->
+
+        <label for="college">College:</label>
+        <select name="college" id="college">
+            <option value="IT">College of IT</option>
+            <option value="College of Science">College of Science</option>
+            <option value="College of Engineering">College of Engineering</option>
+            <option value="College of Arts">College of Arts</option>
+            <option value="College of Business Administration">College of Business Administration</option>
+            <option value="College of Health and Sport Sciences">College of Health and Sport Sciences</option>
+            <option value="Bahrain Teachers College">Bahrain Teachers College</option>
+        </select>
+
+        <button type="submit" id="filterSubmit">Filter</button>
+        <!-- <a class="secondary">Reset Filters</a> -->
+    </form>
+
+  <main class="container">
+    <div id="loading" class="loading">Loading data...</div>
+    <table id="data-table" style="display: none;">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Semester</th>
+          <th>Program</th>
+          <th>Nationality</th>
+          <th>College</th>
+          <th>Number of Students</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data here -->
+      </tbody>
+    </table>
+  </main>
+
+  <footer class="container">
+    <p>&copy; 2024 University of Bahrain Data Visualization</p>
+  </footer>
+
+    <script>
+
+    
+
+    let apiUrl ="https://data.gov.bh/api/explore/v2.1/catalog/datasets/01-statistics-of-students-nationalities_updated/records?where=colleges%20like%20%22IT%22%20AND%20the_programs%20like%20%22bachelor%22&limit=100";
+
+    async function fetchData() {
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        populateTable(data.results);
+    } catch (error) {
+        document.getElementById("loading").textContent = `Error loading data: ${error.message}`;
+    }
+    }
+
+    function populateTable(data) {
+    const table = document.getElementById("data-table");
+    const tbody = table.querySelector("tbody");
+
+    // Clear any rows
+    tbody.innerHTML = "";
+
+    // put data
+    data.forEach((entry) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+        <td>${entry.year}</td>
+        <td>${entry.semester || entry.lfsl_ldrsy}</td>
+        <td>${entry.the_programs || entry.lbrmj}</td>
+        <td>${entry.nationality || entry.ljnsy}</td>
+        <td>${entry.colleges || entry.lklyt}</td>
+        <td>${entry.number_of_students}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // display table
+    table.style.display = "table";
+        document.getElementById("loading").style.display = "none";
+    }
+
+    function display() {
+        fetchData(); 
+    }
+
+    // Fetch data when the page loads
+    document.addEventListener("DOMContentLoaded", display);
+
+    // Apply filter and update the table
+    document.getElementById("filter-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        // Get filter values
+        const program = document.getElementById("program").value;
+        const college = document.getElementById("college").value;
+
+        // Update apiUrl
+        apiUrl = `https://data.gov.bh/api/explore/v2.1/catalog/datasets/01-statistics-of-students-nationalities_updated/records?where=colleges%20like%20%22${college}%22%20AND%20the_programs%20like%20%22${program}%22&limit=100`;
+
+        // Fetch and display filtered data
+        display();
+    });
+
+    
+    
+  </script>
+
+</body>
+</html>
